@@ -65,7 +65,6 @@ dependencies {
     compile('org.apache.curator:curator-recipes:4.0.0')
     compile('commons-pool:commons-pool:1.6')
     compile('com.lmax:disruptor:3.2.0')
-    compile(group: 'org.apache.poi', name: 'poi-ooxml', version: '3.14')
     compile('com.github.pagehelper:pagehelper-spring-boot-starter:1.2.3')
     compile('com.zaxxer:HikariCP:2.3.2')
     compile('com.github.binarywang:weixin-java-miniapp:2.9.6.BETA')
