@@ -1,14 +1,129 @@
-group 'com.dy.shaman'
-version '1.0-SNAPSHOT'
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+}
+
+buildscript {
+    ext {
+        springBootVersion = '1.5.6.RELEASE'
+    }
+    repositories {
+        maven { url "http://112.124.118.149:18081/nexus/content/groups/public/" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
 
 apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
 
+jar {
+    baseName = 'shaman'
+    version = '0.0.1-SNAPSHOT'
+}
 sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
-    mavenCentral()
+    maven { url "http://112.124.118.149:18081/nexus/content/groups/public/" }
 }
 
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+configurations {
+    mybatisGenerator
 }
+
+
+dependencies {
+    compile('com.google.guava:guava:23.0')
+    compile('org.apache.commons:commons-lang3:3.6')
+    compile('ch.qos.logback:logback-classic:1.2.3')
+    compile('ch.qos.logback:logback-core:1.2.3')
+    compile('org.projectlombok:lombok')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-logging')
+    compile('org.springframework.boot:spring-boot-starter-aop')
+    compile('mysql:mysql-connector-java:5.1.38')
+    compile('org.mybatis.spring.boot:mybatis-spring-boot-starter:1.3.0')
+    compile('org.springframework:spring-tx')
+    compile('org.springframework.boot:spring-boot-starter-jdbc')
+    compile('com.alibaba:fastjson:1.2.38')
+    compile('commons-beanutils:commons-beanutils:1.9.3')
+    compile('org.apache.httpcomponents:httpclient:4.5.3')
+    compile('org.apache.commons:commons-lang3:3.6')
+    compile('net.sf.dozer:dozer:5.5.1')
+    compile('org.yaml:snakeyaml:1.18')
+    //compile('org.springframework.security.oauth:spring-security-oauth2')
+    //compile('org.springframework.boot:spring-boot-starter-security')
+    compile('org.springframework.boot:spring-boot-starter-amqp')
+    compile('org.springframework.boot:spring-boot-starter-data-redis')
+    compile('org.springframework.boot:spring-boot-starter-data-rest')
+
+    compile 'org.apache.httpcomponents:httpclient:4.5.3'
+    compile('org.apache.curator:curator-recipes:4.0.0')
+    compile('commons-pool:commons-pool:1.6')
+    compile('com.lmax:disruptor:3.2.0')
+    compile(group: 'org.apache.poi', name: 'poi-ooxml', version: '3.14')
+    compile('com.github.pagehelper:pagehelper-spring-boot-starter:1.2.3')
+    compile('com.zaxxer:HikariCP:2.3.2')
+    compile('com.github.binarywang:weixin-java-miniapp:2.9.6.BETA')
+    compile('com.github.binarywang:weixin-java-pay:2.9.6.BETA')
+
+    compile('io.springfox:springfox-swagger-ui:2.6.1')
+    compile('io.springfox:springfox-swagger2:2.6.1')
+    compile('org.quartz-scheduler:quartz:2.2.1')
+    compile('org.springframework:spring-context-support:4.0.5.RELEASE')
+
+    mybatisGenerator 'org.mybatis.generator:mybatis-generator-core:1.3.5'
+    mybatisGenerator 'mysql:mysql-connector-java:5.1.40'
+    mybatisGenerator 'tk.mybatis:mapper:3.3.9'
+
+}
+
+def getDbProperties = {
+    def properties = new Properties()
+    file("src/main/resources/application.properties").withInputStream { inputStream ->
+        properties.load(inputStream)
+    }
+    properties;
+}
+task mybatisGenerate << {
+    def properties = getDbProperties()
+    ant.properties['targetProject'] = projectDir.path
+    ant.properties['driverClass'] = properties.getProperty("spring.datasource.driverClassName")
+    ant.properties['connectionURL'] = properties.getProperty("spring.datasource.url")
+    ant.properties['userId'] = properties.getProperty("spring.datasource.username")
+    ant.properties['password'] = properties.getProperty("spring.datasource.password")
+    ant.properties['src_main_java'] = sourceSets.main.java.srcDirs[0].path
+    ant.properties['src_main_resources'] = sourceSets.main.resources.srcDirs[0].path
+    ant.properties['modelPackage'] = properties.getProperty("modelPackage")
+    ant.properties['mapperPackage'] = properties.getProperty("mapperPackage")
+    ant.properties['sqlMapperPackage'] = properties.getProperty("sqlMapperPackage")
+    ant.taskdef(
+            name: 'mbgenerator',
+            classname: 'org.mybatis.generator.ant.GeneratorAntTask',
+            classpath: configurations.mybatisGenerator.asPath
+    )
+    ant.mbgenerator(overwrite: true,
+            configfile: 'src/main/resources/generatorConfig.xml', verbose: true) {
+        propertyset {
+            propertyref(name: 'targetProject')
+            propertyref(name: 'userId')
+            propertyref(name: 'driverClass')
+            propertyref(name: 'connectionURL')
+            propertyref(name: 'password')
+            propertyref(name: 'src_main_java')
+            propertyref(name: 'src_main_resources')
+            propertyref(name: 'modelPackage')
+            propertyref(name: 'mapperPackage')
+            propertyref(name: 'sqlMapperPackage')
+        }
+    }
+}
+
+
+compileJava.dependsOn(processResources)
+
+
